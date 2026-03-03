@@ -1,5 +1,6 @@
 import os
 import json
+import base64
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -14,10 +15,24 @@ MF_API_BASE_URL = "https://api.moneyforward.com"
 GOOGLE_SHEETS_ID = os.getenv("GOOGLE_SHEETS_ID", "")
 
 # Google Sheets 認証用JSON（環境変数から取得）
-GOOGLE_SHEETS_CREDENTIALS_JSON = os.getenv("GOOGLE_SHEETS_CREDENTIALS_JSON", "{}")
+# Base64 形式 または 直接 JSON 形式に対応
+GOOGLE_SHEETS_CREDENTIALS = {}
 try:
-    GOOGLE_SHEETS_CREDENTIALS = json.loads(GOOGLE_SHEETS_CREDENTIALS_JSON)
-except json.JSONDecodeError:
+    # まず Base64 形式を試す
+    creds_b64 = os.getenv("GOOGLE_SHEETS_CREDENTIALS_B64", "")
+    if creds_b64:
+        json_str = base64.b64decode(creds_b64).decode('utf-8')
+        GOOGLE_SHEETS_CREDENTIALS = json.loads(json_str)
+    else:
+        # Base64 形式がない場合は直接 JSON 形式を試す
+        GOOGLE_SHEETS_CREDENTIALS_JSON = os.getenv("GOOGLE_SHEETS_CREDENTIALS_JSON", "{}")
+        GOOGLE_SHEETS_CREDENTIALS = json.loads(GOOGLE_SHEETS_CREDENTIALS_JSON)
+
+    # typeフィールドの存在確認
+    if not isinstance(GOOGLE_SHEETS_CREDENTIALS, dict) or "type" not in GOOGLE_SHEETS_CREDENTIALS:
+        raise ValueError("Invalid credentials format: missing 'type' field")
+except (json.JSONDecodeError, ValueError, Exception) as e:
+    print(f"警告: Google Sheets 認証情報の読み込みに失敗しました: {str(e)}")
     GOOGLE_SHEETS_CREDENTIALS = {}
 
 # Google Sheets シート名
