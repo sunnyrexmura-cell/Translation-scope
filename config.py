@@ -16,8 +16,13 @@ GOOGLE_SHEETS_ID = os.getenv("GOOGLE_SHEETS_ID", "")
 # Google Sheets 認証用JSON（環境変数から取得）
 GOOGLE_SHEETS_CREDENTIALS_JSON = os.getenv("GOOGLE_SHEETS_CREDENTIALS_JSON", "{}")
 try:
+    # JSON文字列をパース
     GOOGLE_SHEETS_CREDENTIALS = json.loads(GOOGLE_SHEETS_CREDENTIALS_JSON)
-except json.JSONDecodeError:
+    # typeフィールドの存在確認
+    if not isinstance(GOOGLE_SHEETS_CREDENTIALS, dict) or "type" not in GOOGLE_SHEETS_CREDENTIALS:
+        raise ValueError("Invalid credentials format: missing 'type' field")
+except (json.JSONDecodeError, ValueError) as e:
+    print(f"警告: Google Sheets 認証情報の読み込みに失敗しました: {str(e)}")
     GOOGLE_SHEETS_CREDENTIALS = {}
 
 # Google Sheets シート名
