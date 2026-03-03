@@ -21,18 +21,31 @@ try:
     # まず Base64 形式を試す
     creds_b64 = os.getenv("GOOGLE_SHEETS_CREDENTIALS_B64", "")
     if creds_b64:
+        print(f"[DEBUG] Base64 credentials found, length: {len(creds_b64)}")
         json_str = base64.b64decode(creds_b64).decode('utf-8')
+        print(f"[DEBUG] Decoded JSON length: {len(json_str)}")
         GOOGLE_SHEETS_CREDENTIALS = json.loads(json_str)
+        print(f"[DEBUG] Parsed credentials type: {GOOGLE_SHEETS_CREDENTIALS.get('type')}")
     else:
         # Base64 形式がない場合は直接 JSON 形式を試す
         GOOGLE_SHEETS_CREDENTIALS_JSON = os.getenv("GOOGLE_SHEETS_CREDENTIALS_JSON", "{}")
+        print(f"[DEBUG] Using direct JSON, length: {len(GOOGLE_SHEETS_CREDENTIALS_JSON)}")
         GOOGLE_SHEETS_CREDENTIALS = json.loads(GOOGLE_SHEETS_CREDENTIALS_JSON)
+        print(f"[DEBUG] Parsed credentials type: {GOOGLE_SHEETS_CREDENTIALS.get('type')}")
 
     # typeフィールドの存在確認
     if not isinstance(GOOGLE_SHEETS_CREDENTIALS, dict) or "type" not in GOOGLE_SHEETS_CREDENTIALS:
         raise ValueError("Invalid credentials format: missing 'type' field")
+
+    # Private key 検証
+    if "private_key" in GOOGLE_SHEETS_CREDENTIALS:
+        pk = GOOGLE_SHEETS_CREDENTIALS["private_key"]
+        print(f"[DEBUG] Private key length: {len(pk)}, starts with: {pk[:30]}")
+
 except (json.JSONDecodeError, ValueError, Exception) as e:
-    print(f"警告: Google Sheets 認証情報の読み込みに失敗しました: {str(e)}")
+    print(f"[ERROR] Google Sheets credentials error: {str(e)}")
+    import traceback
+    traceback.print_exc()
     GOOGLE_SHEETS_CREDENTIALS = {}
 
 # Google Sheets シート名
