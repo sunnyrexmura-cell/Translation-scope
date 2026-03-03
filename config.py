@@ -7,10 +7,6 @@ from dotenv import load_dotenv
 # .env ファイルを読み込む
 load_dotenv()
 
-# マネーフォワード API
-MF_API_KEY = os.getenv("MF_API_KEY", "")
-MF_API_BASE_URL = "https://api.moneyforward.com"
-
 # Google Sheets
 GOOGLE_SHEETS_ID = os.getenv("GOOGLE_SHEETS_ID", "")
 
