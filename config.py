@@ -37,9 +37,14 @@ try:
     if not isinstance(GOOGLE_SHEETS_CREDENTIALS, dict) or "type" not in GOOGLE_SHEETS_CREDENTIALS:
         raise ValueError("Invalid credentials format: missing 'type' field")
 
-    # Private key 検証
+    # Private key 検証・修正
     if "private_key" in GOOGLE_SHEETS_CREDENTIALS:
         pk = GOOGLE_SHEETS_CREDENTIALS["private_key"]
+        # \n エスケープを実際の改行に変換（必要な場合）
+        if isinstance(pk, str) and '\\n' in pk:
+            pk = pk.replace('\\n', '\n')
+            GOOGLE_SHEETS_CREDENTIALS["private_key"] = pk
+            print(f"[DEBUG] Converted escaped newlines in private key")
         print(f"[DEBUG] Private key length: {len(pk)}, starts with: {pk[:30]}")
 
 except (json.JSONDecodeError, ValueError, Exception) as e:
