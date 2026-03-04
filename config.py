@@ -26,8 +26,17 @@ try:
         # Base64 形式がない場合は直接 JSON 形式を試す
         GOOGLE_SHEETS_CREDENTIALS_JSON = os.getenv("GOOGLE_SHEETS_CREDENTIALS_JSON", "{}")
         print(f"[DEBUG] Using direct JSON, length: {len(GOOGLE_SHEETS_CREDENTIALS_JSON)}")
-        GOOGLE_SHEETS_CREDENTIALS = json.loads(GOOGLE_SHEETS_CREDENTIALS_JSON)
-        print(f"[DEBUG] Parsed credentials type: {GOOGLE_SHEETS_CREDENTIALS.get('type')}")
+        print(f"[DEBUG] First 200 chars: {GOOGLE_SHEETS_CREDENTIALS_JSON[:200]}")
+
+        # JSON パース試行
+        try:
+            GOOGLE_SHEETS_CREDENTIALS = json.loads(GOOGLE_SHEETS_CREDENTIALS_JSON)
+            print(f"[DEBUG] Successfully parsed JSON")
+            print(f"[DEBUG] Parsed credentials type: {GOOGLE_SHEETS_CREDENTIALS.get('type')}")
+        except json.JSONDecodeError as json_err:
+            print(f"[ERROR] JSON parse error: {json_err}")
+            print(f"[ERROR] Error at position {json_err.pos}: {json_err.msg}")
+            raise
 
     # typeフィールドの存在確認
     if not isinstance(GOOGLE_SHEETS_CREDENTIALS, dict) or "type" not in GOOGLE_SHEETS_CREDENTIALS:
@@ -36,12 +45,16 @@ try:
     # Private key 検証・修正
     if "private_key" in GOOGLE_SHEETS_CREDENTIALS:
         pk = GOOGLE_SHEETS_CREDENTIALS["private_key"]
+        print(f"[DEBUG] Private key found, length: {len(pk)}")
         # \n エスケープを実際の改行に変換（必要な場合）
         if isinstance(pk, str) and '\\n' in pk:
             pk = pk.replace('\\n', '\n')
             GOOGLE_SHEETS_CREDENTIALS["private_key"] = pk
             print(f"[DEBUG] Converted escaped newlines in private key")
-        print(f"[DEBUG] Private key length: {len(pk)}, starts with: {pk[:30]}")
+        print(f"[DEBUG] Private key starts with: {pk[:40]}")
+        print(f"[DEBUG] Private key ends with: {pk[-40:]}")
+    else:
+        print(f"[WARNING] No private_key field found in credentials")
 
 except (json.JSONDecodeError, ValueError, Exception) as e:
     print(f"[ERROR] Google Sheets credentials error: {str(e)}")
